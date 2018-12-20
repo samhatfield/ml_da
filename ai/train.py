@@ -1,5 +1,5 @@
 import numpy as np
-from neural_net import build_model()
+from neural_net import build_model
 from model_params import nx
 
 # Load raw training data
