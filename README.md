@@ -15,4 +15,4 @@ This repository contains code for investigating machine learning and data assimi
 
 ## Installation
 
-Simply run `bash setup.sh` from the root directory. This will build the numerical model and add it to the Python path.
+Simply run `source setup.sh` from the root directory. This will build the numerical model and add it to the Python path.
