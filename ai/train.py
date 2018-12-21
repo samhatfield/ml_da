@@ -1,6 +1,8 @@
 import numpy as np
 from neural_net import build_model
-from model_params import nx
+from numerical_model.params import params
+
+nx = int(params.nx)
 
 # Load raw training data
 raw_training_data = np.loadtxt('training_data.txt')
