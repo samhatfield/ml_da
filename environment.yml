@@ -1,0 +1,8 @@
+name: lorenz96_machine_learning
+
+dependencies:
+- python=3.6
+- numpy
+- keras
+- seaborn
+- matplotlib
