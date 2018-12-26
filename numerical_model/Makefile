@@ -1,4 +1,4 @@
-PYFC = f2py3
+PYFC = f2py
 FC = gfortran
 
 all: models params
@@ -6,11 +6,11 @@ all: models params
 models: params.f90 lorenz96.f90
 	$(PYFC) --overwrite-signature -h models.pyf $^ models.f90 -m $@
 	$(PYFC) -c models.pyf $^ models.f90
-	mv $@.cpython-34m.so models.so
+	mv $@.*.so models.so
 
 params:
 	$(PYFC) -c -m params params.f90
-	mv $@.cpython-34m.so params.so
+	mv $@.*.so params.so
 
 .PHONY: clean
 clean:
