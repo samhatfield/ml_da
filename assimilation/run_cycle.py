@@ -8,8 +8,12 @@ import numpy as np
 from numpy.random import randn
 from math import sqrt
 import matplotlib.pyplot as plt
+from ai.forecaster import Forecaster
 
 nx, ny = int(params.nx), int(params.ny)
+
+# Use the neural net to generate the background forecast
+use_nn = False
 
 n_steps = 2000
 obs_err_var = 0.2
@@ -38,6 +42,8 @@ for i in range(n_steps):
 # Generate initial ensemble
 ensemble = gen_ensemble(truth, n_ens)
 
+nn_fcster = Forecaster(n_ens)
+
 # # Run assimilation cycle
 for i in range(n_steps):
     if i % 10 == 0:
@@ -52,5 +58,8 @@ for i in range(n_steps):
         output(ensemble, truth[i,:])
 
     # Forecast step
-    for i in range(n_ens):
-        ensemble[i,:] = step_member(ensemble[i,:])
+    if use_nn:
+        ensemble = nn_fcster.step(ensemble)
+    else:
+        for i in range(n_ens):
+            ensemble[i,:] = step_member(ensemble[i,:])
