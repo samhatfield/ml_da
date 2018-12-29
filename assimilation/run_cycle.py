@@ -1,7 +1,7 @@
 from numerical_model.models import step_two_layer as truth_step, step_one_layer as fcst_step
 from numerical_model.params import params
 from setup import spin_up, gen_ensemble
-from output import output
+from output import setup_output, output
 from observation import observe
 from assimilate import assimilate
 import numpy as np
@@ -44,6 +44,9 @@ ensemble = gen_ensemble(truth, n_ens)
 
 nn_fcster = Forecaster(n_ens)
 
+# Setup output
+setup_output(n_ens)
+
 # # Run assimilation cycle
 for i in range(n_steps):
     if i % 10 == 0:
@@ -55,7 +58,7 @@ for i in range(n_steps):
 
     # Write output
     if i % write_freq == 0:
-        output(ensemble, truth[i,:])
+        output(i, i/write_freq, ensemble, truth[i,:])
 
     # Forecast step
     if use_nn:
