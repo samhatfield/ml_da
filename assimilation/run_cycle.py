@@ -37,7 +37,10 @@ for i in range(1,n_steps):
 obs = observe(truth)
 obs_covar = obs_err_var * np.eye(nx)
 for i in range(n_steps):
-    obs[i,:] += sqrt(obs_err_var)*randn(nx)
+    if i%assim_freq == 0:
+        obs[i,:] += sqrt(obs_err_var)*randn(nx)
+    else:
+        obs[i,:] = np.nan
 
 # Generate initial ensemble
 ensemble = gen_ensemble(truth, n_ens)
@@ -58,7 +61,7 @@ for i in range(n_steps):
 
     # Write output
     if i % write_freq == 0:
-        output(i, i/write_freq, ensemble, truth[i,:])
+        output(i, i/write_freq, ensemble, truth[i,:], obs[i,:])
 
     # Forecast step
     if use_nn:
