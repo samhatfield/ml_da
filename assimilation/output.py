@@ -20,7 +20,7 @@ def setup_output(n_ens):
 
     # Define multidimensional variables
     truth_x = dataset.createVariable("truth_x",    np.float32, ("time_step", "i"))
-    ens_x   = dataset.createVariable("ensemble_x", np.float32, ("time_step", "member", "i"))
+    ens_x   = dataset.createVariable("ensemble_x", np.float32, ("member", "time_step", "i"))
     obs_x   = dataset.createVariable("obs_x",      np.float32, ("time_step", "i"))
 
     # Assign values to non-unlimited dimensions
@@ -34,6 +34,6 @@ def output(time_step, time_index, ensemble, truth, obs):
     dataset = Dataset("output.nc", "a", format="NETCDF4_CLASSIC")
     dataset["time_step"][time_index] = time_step
     dataset["truth_x"][time_index,:]      = truth[:]
-    dataset["ensemble_x"][time_index,:,:] = ensemble[:,:]
+    dataset["ensemble_x"][:,time_index,:] = ensemble[:,:]
     dataset["obs_x"][time_index,:]        = obs[:]
     dataset.close()
