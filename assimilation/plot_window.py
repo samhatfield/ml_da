@@ -3,7 +3,7 @@ import seaborn as sns
 from iris import load, analysis, Constraint
 import iris.plot as iplt
 
-sns.set_style('whitegrid', {'font.sans-serif': "Helvetica"})
+sns.set(style='whitegrid', rc={'font.sans-serif': "Helvetica"})
 
 # X variable to plot
 x_plot = 0
@@ -21,15 +21,15 @@ ens_mean = ens.collapsed(['member'], analysis.MEAN)
 ens_std = ens.collapsed(['member'], analysis.STD_DEV)
 
 # Get time coordinate
-time = truth.coord('time_step')
+time = truth.coord('time_step').points
 
 # Plot truth, ens mean and ens spread
 fig = plt.figure(figsize=(10,3))
-truth_h, = iplt.plot(truth, label="truth")
-ens_h, = iplt.plot(ens_mean, label="ensemble mean")
-obs_h, = iplt.plot(obs, "x", label="observations")
+truth_h, = plt.plot(time, truth.data, label="truth")
+ens_h, = plt.plot(time, ens_mean.data, label="ensemble mean")
+obs_h, = plt.plot(time, obs.data, "x", label="observations")
 plt.fill_between(
-        time.points, (ens_mean-ens_std).data, (ens_mean+ens_std).data,
+        time, (ens_mean-ens_std).data, (ens_mean+ens_std).data,
         facecolor=ens_h.get_color(), alpha=0.5, edgecolor='none', label="ensemble spread"
 )
 
