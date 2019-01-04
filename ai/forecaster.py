@@ -17,12 +17,13 @@ class Forecaster:
         self.tends = np.zeros((3,n_ens,nx))
         self.mode = 0
 
+    # Step forward by one time step
     def step(self, members):
         self.tends = np.roll(self.tends, 1, axis=0)
         mems_norm = self.normalize(members)
         self.tends[0,:,:] = self.model.predict(mems_norm, batch_size=1)
 
-        # Adams-Bashforth
+        # 3rd order Adams-Bashforth
         if self.mode == 0:
             tend = self.tends[0,:,:]
             self.mode = 1
@@ -33,8 +34,13 @@ class Forecaster:
             tend = (23.0/12.0)*self.tends[0,:,:] - (4.0/3.0)*self.tends[1,:,:] + (5.0/12.0)*self.tends[2,:,:]
         return members + tend
 
+    # Reset tendencies
+    def reset_tends(self):
+        self.tends *= 0.0
+        self.mode = 0
+
+    # Normalize inputs to neural net
     def normalize(self, state):
-        # Normalisation factors for input layer
         max_train = 30.0
         min_train = -20.0
 

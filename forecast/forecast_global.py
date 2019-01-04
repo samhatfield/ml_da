@@ -2,13 +2,12 @@ from numerical_model.models import step_two_layer as truth_step, step_one_layer 
 import numpy as np
 from numerical_model.params import params
 from ai.forecaster import Forecaster
-import matplotlib.pyplot as plt
 
 nx, ny = int(params.nx), int(params.ny)
 
 # Number of forecasts, length of forecasts and spacing between initial conditions drawn from model
 # spin-up (in timesteps)
-n_fcsts = 10
+n_fcsts = 500
 fcst_len = 500
 spacing = 5000
 
@@ -45,6 +44,7 @@ for i in range(n_fcsts):
         num_model_state = fcst_step(num_model_state)
 
     # Run neural net forecast
+    nn_fcster.reset_tends()
     neur_model_fcst = np.zeros((nx,fcst_len))
     neur_model_state = np.zeros((1,nx))
     neur_model_state[0,:] = truth[:nx]
@@ -64,14 +64,5 @@ for i in range(n_fcsts):
 num_model_err_store /= n_fcsts
 neur_model_err_store /= n_fcsts
 
-plt.plot(truth_fcst[0,:], label='Truth')
-plt.plot(num_model_fcst[0,:], label='Numerical model')
-plt.plot(neur_model_fcst[0,:], label='Neural net')
-plt.legend()
-
-plt.figure()
-plt.plot(num_model_err_store, label='Numerical model')
-plt.plot(neur_model_err_store, label='Neural net')
-plt.legend()
-
-plt.show()
+results = np.stack([num_model_err_store, neur_model_err_store], axis=1)
+np.save('global_results.npy', results)
