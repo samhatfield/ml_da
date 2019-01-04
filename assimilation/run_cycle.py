@@ -59,13 +59,19 @@ for i in range(n_steps):
     if i%assim_freq == 0:
         ensemble = assimilate(ensemble, obs[i,:], obs_covar)
 
+        # Reset neural net forecaster tendencies for next background forecast
+        if use_nn:
+            nn_fcster.reset_tends()
+
     # Write output
     if i % write_freq == 0:
         output(i, i/write_freq, ensemble, truth[i,:], obs[i,:])
 
     # Forecast step
     if use_nn:
+        # Use neural net forecaster if enabled
         ensemble = nn_fcster.step(ensemble)
     else:
+        # Else use numerical model
         for i in range(n_ens):
             ensemble[i,:] = step_member(ensemble[i,:])
