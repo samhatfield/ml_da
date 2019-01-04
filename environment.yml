@@ -7,3 +7,4 @@ dependencies:
 - seaborn
 - matplotlib
 - netCDF4
+- iris
