@@ -30,10 +30,12 @@ def setup_output(n_ens):
     dataset.close()
 
 def output(time_step, time_index, ensemble, truth, obs):
+    nx = int(params.nx)
+
     # Append latest data along time dimension
     dataset = Dataset("output.nc", "a", format="NETCDF4_CLASSIC")
     dataset["time_step"][time_index] = time_step
-    dataset["truth_x"][time_index,:]      = truth[:]
-    dataset["ensemble_x"][:,time_index,:] = ensemble[:,:]
+    dataset["truth_x"][time_index,:]      = truth[:nx]
+    dataset["ensemble_x"][:,time_index,:] = ensemble[:,:nx]
     dataset["obs_x"][time_index,:]        = obs[:]
     dataset.close()

@@ -1,4 +1,4 @@
-from numerical_model.models import step_two_layer as truth_step, step_one_layer as fcst_step
+from numerical_model.models import step_three_layer as truth_step, step_two_layer as fcst_step
 from numerical_model.params import params
 from setup import spin_up, gen_ensemble
 from output import setup_output, output
@@ -24,14 +24,14 @@ write_freq = 1
 step_member = fcst_step
 
 # Define and spin up truth
-truth = np.zeros((n_steps,nx))
+truth = np.zeros((n_steps,nx+nx*ny))
 truth_full = spin_up()
-truth[0,:] = truth_full[:nx]
+truth[0,:] = truth_full[:nx+nx*ny]
 
 # Generate truth run
 for i in range(1,n_steps):
     truth_full = truth_step(truth_full)
-    truth[i,:] = truth_full[:nx]
+    truth[i,:] = truth_full[:nx+nx*ny]
 
 # Extract observations
 obs = observe(truth)
@@ -44,6 +44,9 @@ for i in range(n_steps):
 
 # Generate initial ensemble
 ensemble = gen_ensemble(truth, n_ens)
+
+if use_nn:
+    ensemble = ensemble[:,:nx]
 
 nn_fcster = Forecaster(n_ens)
 
@@ -65,7 +68,7 @@ for i in range(n_steps):
 
     # Write output
     if i % write_freq == 0:
-        output(i, i/write_freq, ensemble, truth[i,:], obs[i,:])
+        output(i, i/write_freq, ensemble, truth[i,:nx], obs[i,:])
 
     # Forecast step
     if use_nn:

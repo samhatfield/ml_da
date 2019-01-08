@@ -1,9 +1,9 @@
-from numerical_model.models import step_two_layer as truth_step, step_one_layer as fcst_step
+from numerical_model.models import step_three_layer as truth_step, step_two_layer as fcst_step
 import numpy as np
 from numerical_model.params import params
 from ai.forecaster import Forecaster
 
-nx, ny = int(params.nx), int(params.ny)
+nx, ny, nz = int(params.nx), int(params.ny), int(params.nz)
 
 # Number of forecasts, length of forecasts and spacing between initial conditions drawn from model
 # spin-up (in timesteps)
@@ -12,7 +12,7 @@ fcst_len = 500
 spacing = 5000
 
 # Set initial condition for truth
-truth = np.zeros(nx+nx*ny)
+truth = np.zeros(nx+nx*ny+nx*ny*nz)
 truth[0] = 8.0
 
 # Initialise variables for storing forecast errors
@@ -38,9 +38,9 @@ for i in range(n_fcsts):
 
     # Run numerical model forecast
     num_model_fcst = np.zeros((nx,fcst_len))
-    num_model_state = truth[:nx]
+    num_model_state = truth[:nx+nx*ny]
     for j in range(fcst_len):
-        num_model_fcst[:,j] = num_model_state[:]
+        num_model_fcst[:,j] = num_model_state[:nx]
         num_model_state = fcst_step(num_model_state)
 
     # Run neural net forecast
@@ -65,4 +65,4 @@ num_model_err_store /= n_fcsts
 neur_model_err_store /= n_fcsts
 
 results = np.stack([num_model_err_store, neur_model_err_store], axis=1)
-np.save('global_results.npy', results)
+np.save('global_results_three_level.npy', results)

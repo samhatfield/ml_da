@@ -5,7 +5,7 @@ from numerical_model.params import params
 nx = int(params.nx)
 
 # Load raw training data
-raw_training_data = np.loadtxt('training_data.txt')
+raw_training_data = np.loadtxt('training_data_three_level.txt')
 
 # Get number of training pairs
 print(f"Training with {raw_training_data.shape[0]} training pairs")
@@ -25,4 +25,4 @@ model = build_model(nx, nx)
 # Train!
 model.fit(x_train, y_train, epochs=200,batch_size=128,validation_split=0.2)
 
-model.save_weights("weights")
+model.save_weights("weights_three_level")

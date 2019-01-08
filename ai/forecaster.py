@@ -10,7 +10,7 @@ class Forecaster:
 
         # Build model and load weights
         self.model = build_model(nx, nx)
-        weights_file = dirname(__file__) + "/weights"
+        weights_file = dirname(__file__) + "/weights_three_level"
         self.model.load_weights(weights_file, by_name=False)
 
         # Stores Adams-Bashforth steps
