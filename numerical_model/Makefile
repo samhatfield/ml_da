@@ -1,16 +1,14 @@
 PYFC = f2py
 FC = gfortran
 
-all: models params
+subroutines: qg_constants.f90 calc_pv.f90 pv_operator.f90 laplacian_2d.f90
+	$(PYFC) --overwrite-signature -h subroutines.pyf $^ subroutines.f90 -m $@
+	$(PYFC) -c subroutines.pyf $^ subroutines.f90
+	mv $@.*.so subroutines.so
 
-models: params.f90 lorenz96.f90
-	$(PYFC) --overwrite-signature -h models.pyf $^ models.f90 -m $@
-	$(PYFC) -c models.pyf $^ models.f90
-	mv $@.*.so models.so
-
-params:
-	$(PYFC) -c -m params params.f90
-	mv $@.*.so params.so
+qg_constants:
+	$(PYFC) -c -m qg_constants qg_constants.f90
+	mv $@.*.so qg_constants.so
 
 .PHONY: clean
 clean:
