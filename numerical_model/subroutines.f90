@@ -14,33 +14,26 @@
 !! This routine calculates potential vorticity and wind from the
 !! streamfunction, and is called before an integration of the QG model.
 
-subroutine prepare_integration(q_in, x_in, x_north_in, x_south_in, rs,&
-    & q_out, x_out, x_north_out, x_south_out)
+subroutine prepare_integration(x, x_north, x_south, rs, q_out, u_out, v_out)
 
 use qg_constants, only: nx, ny, f1, f2, deltax, deltay, bet
 
 implicit none
 
 !f2py integer, intent(aux) :: nx, ny
-real(8), intent(in) :: q_in(nx,ny,2)
-real(8), intent(in) :: x_in(nx,ny,2)
-real(8), intent(in) :: x_north_in(2)
-real(8), intent(in) :: x_south_in(2)
+real(8), intent(in) :: x(nx,ny,2)
+real(8), intent(in) :: x_north(2)
+real(8), intent(in) :: x_south(2)
 real(8), intent(in) :: rs(nx,ny)
 
 real(8), intent(out) :: q_out(nx,ny,2)
-real(8), intent(out) :: x_out(nx,ny,2)
-real(8), intent(out) :: x_north_out(2)
-real(8), intent(out) :: x_south_out(2)
-
-! -- set up output variables
-q_out = q_in; x_out = x_in; x_north_out = x_north_in; x_south_out = x_south_in
+real(8), intent(out) :: u_out(nx,ny,2)
+real(8), intent(out) :: v_out(nx,ny,2)
 
 ! -- calculate potential vorticity and wind components
 
-call calc_pv(nx, ny, q_out, x_out, x_north_out, x_south_out, f1, f2, deltax, deltay, bet, rs)
-! call zonal_wind(flds%u,flds%x,flds%x_north,flds%x_south,flds%nx,flds%ny, &
-!               & conf%deltay)
-! call meridional_wind(flds%v,flds%x,flds%nx,flds%ny,conf%deltax)
+call calc_pv(nx, ny, q_out, x, x_north, x_south, f1, f2, deltax, deltay, bet, rs)
+call zonal_wind(u_out, x, x_north, x_south, nx, ny, deltay)
+call meridional_wind(v_out, x, nx, ny, deltax)
 
 end subroutine prepare_integration
