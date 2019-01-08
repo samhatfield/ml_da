@@ -82,7 +82,7 @@ call advect_pv(q_out, q_in, q_north, q_south, u_in, v_in, nx, ny, deltax, deltay
 
 !--- invert the potential vorticity to determine streamfunction
 
-!call invert_pv(x_out, q_out, x_north, x_south, rs, nx, ny, deltax, deltay, f1, f2, bet)
+call invert_pv(x_out, q_out, x_north, x_south, rs, nx, ny, deltax, deltay, f1, f2, bet)
 
 ! -- calculate potential vorticity and wind components
 
