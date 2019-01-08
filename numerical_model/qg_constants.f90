@@ -30,8 +30,9 @@ real(8),parameter :: f0 = 1e-4_8         !< Coriolis parameter at southern bound
 real(8),parameter :: bet0 = 1.5e-11_8    !< Meridional gradient of f (s^{-1} m^{-1})
 real(8),parameter :: horog = 2000.0_8    !< height of orography (m)
 real(8),parameter :: worog = 1000e3_8    !< e-folding width of orography (m)
-real(8),parameter :: d1 = 5500.0_8
-real(8),parameter :: d2 = 4500.0_8
+real(8),parameter :: d1 = 5500.0_8       !< top layer depth (m)
+real(8),parameter :: d2 = 4500.0_8       !< bottom layer depth (m)
+real(8),parameter :: dt0 = 60.0_8*60.0_8 !< time step (s)
 
 !--- Non-dimensional parameters
 
@@ -39,6 +40,7 @@ real(8),parameter :: u1 = ubar1/ubar
 real(8),parameter :: u2 = ubar2/ubar
 real(8),parameter :: bet = bet0*scale_length*scale_length/ubar
 real(8),parameter :: rossby_number = ubar/(f0*scale_length)
+real(8),parameter :: dt = dt0 * ubar/scale_length
 
 !--- Additional parameters
 
