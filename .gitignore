@@ -3,3 +3,5 @@ __pycache__
 *.so
 *.pyf
 .DS_Store
+*.npy
+*.nc

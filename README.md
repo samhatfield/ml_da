@@ -10,9 +10,15 @@ This repository contains code for investigating machine learning and data assimi
 - `numerical_model` contains FORTRAN90 code for running the numerical model. This is compiled with f2py so it can be called from Python.
 
 ## Dependencies
+- python=3.6
 - numpy
 - keras
+- seaborn
+- matplotlib
+- netCDF4
+- iris
 
 ## Installation
 
-Simply run `source setup.sh` from the root directory. This will build the numerical model and add it to the Python path.
+1. Set up conda environment. Run `conda activate lorenz96_machine_learning`.
+2. Run `source setup.sh` from the root directory. This will build the numerical model and add it to the Python path.
