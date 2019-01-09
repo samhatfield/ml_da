@@ -572,7 +572,7 @@ SUBROUTINE set99 (trigs, ifax, n)
   i = ifax(1)
   IF (ifax(i+1) > 5 .OR. n <= 4) ifax(1) = -99
   IF (ifax(1) <= 0 ) THEN
-    CALL abor1_ftn('abor1_ftn called from SET99: INVALID N')
+    STOP 'abor1_ftn called from SET99: INVALID N'
   END IF
   CALL fftrig (trigs, n, mode)
   RETURN

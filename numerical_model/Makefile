@@ -3,7 +3,7 @@ FC = gfortran
 
 all: subroutines qg_constants
 
-subroutines: qg_constants.f90 calc_pv.f90 pv_operator.f90 laplacian_2d.f90 zonal_wind.f90\
+subroutines: qg_constants.f90 pv_operator.f90 laplacian_2d.f90 zonal_wind.f90\
 	meridional_wind.f90 advect_pv.f90 invert_pv.f90 solve_elliptic_system.f90 solve_helmholz.f90\
 	fft99f.f90
 	$(PYFC) --overwrite-signature -h subroutines.pyf $^ subroutines.f90 -m $@

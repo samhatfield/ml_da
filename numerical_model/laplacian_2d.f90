@@ -25,8 +25,7 @@ real(8), intent(in) :: deltay        !< Meridional grid spacing (non-dimensional
 
 !--- del-squared of the streamfunction (5-point laplacian)
 
-del2x(:,:) = -2.0_8*( 1.0_8/(deltax*deltax) &
-                             +1.0_8/(deltay*deltay))*x(:,:)
+del2x(:,:) = -2.0_8*( 1.0_8/(deltax*deltax) + 1.0_8/(deltay*deltay))*x(:,:)
 
 del2x(1:nx-1,:) = del2x(1:nx-1,:) + (1.0_8/(deltax*deltax))*x(2:nx  ,:)
 del2x(nx    ,:) = del2x(nx    ,:) + (1.0_8/(deltax*deltax))*x(1     ,:)
