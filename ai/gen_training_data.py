@@ -1,31 +1,39 @@
-from numerical_model.models import step_two_layer as step
-from numerical_model.params import params
-import numpy as np
+from numerical_model.subroutines import prepare_integration, propagate
+from numerical_model.qg_constants import qg_constants as const
+from qg_setup import define_orography, invent_state
+from qg_output import setup_output, output
+from datetime import datetime, timedelta
 
-nx = params.nx
-ny = params.ny
-δt = params.dt
+# Model time step
+dt = float(const.dt0)
 
-# Length of run
-N = int(2010000.0 * 1.0/δt)
+# Start and end date
+start = datetime(2018,1,1)
+end   = datetime(2018,4,1)
 
-# Initialise state vector array
-state_1 = state_2 = np.zeros(nx+nx*ny)
-state_1[0] = 8.0
+# Construct range of dates for each timestep
+simul_len = (end - start).total_seconds()
+date_range = [start + timedelta(seconds=i*dt) for i in range(int(simul_len/dt))]
 
-# Generate training data
-with open('training_data.txt', 'w') as training_data_file:
-    for i in range(N):
-        if i%10000 == 0:
-            print(f"Time step {i}")
+# Define model orography
+orog = define_orography()
 
-        # Step forward once
-        state_2 = step(state_1)
+# Set up up initial stream function and boundary arrays
+x, x_north, x_south, q_north, q_south = invent_state(orog)
 
-        # Write training data every 1.0 model time unit
-        if i%(1.0/δt) == 0:
-            # Form training data and write to file
-            training_data_line = np.concatenate((state_1[:nx], state_2[:nx] - state_1[:nx]))
-            training_data_file.write(' '.join([str(f) for f in training_data_line]) + '\n')
+# Get PV and wind from streamfunction
+q, u, v = prepare_integration(x, x_north, x_south, orog)
 
-        state_1 = state_2
+# Set up output NetCDF file and print zeroth time step
+setup_output(start)
+output(start, start, 0, q, x, u, v)
+
+# Main model loop, starting from first time step
+for i, date in enumerate(date_range[1:], 1):
+    print(f"Integrating {date}")
+
+    # Compute time step
+    q, _, u, v = propagate(q, q_north, q_south, x_north, x_south, u, v, orog)
+
+    # Output prognostic variables
+    output(start, date, i, q, x, u, v)
