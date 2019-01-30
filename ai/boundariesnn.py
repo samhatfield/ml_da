@@ -56,12 +56,12 @@ class BoundariesNN:
 
         print("Training data prepared")
 
-        model = BoundariesNN.build_model()
+        model = BoundariesNN.build_model(n_input, n_output)
         model.fit(train_in, train_out, epochs=200, batch_size=128, validation_split=0.2)
         model.save_weights(BoundariesNN.weights_file)
 
     @staticmethod
-    def build_model():
+    def build_model(n_input, n_output):
         from keras.models import Sequential
         from keras.layers import Dense
 
