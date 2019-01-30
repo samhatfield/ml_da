@@ -78,12 +78,12 @@ class BoundariesNN:
     @staticmethod
     def get_stencil_top(full_array, long):
         top = full_array[:,:2,:]
-        stencil = np.roll(top,1-long,axis=2)[...3]
+        stencil = np.roll(top,1-long,axis=2)[:,:,3]
         return stencil.flatten()
 
     @staticmethod
     def get_stencil_bottom(full_array, long):
         top = full_array[:,-2:,:]
-        stencil = np.roll(top,1-long,axis=2)[...3]
+        stencil = np.roll(top,1-long,axis=2)[:,:,3]
         stencil = stencil[:,::-1,:]
         return stencil.flatten()
