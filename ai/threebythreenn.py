@@ -9,16 +9,9 @@ class ThreeByThreeNN:
     n_per_hidden_layer = 40
 
     @staticmethod
-    def train():
-        from iris import load_cubes
-        from keras.models import Sequential
-        from keras.layers import Dense
-
-        # Load training data
-        q, u, v = load_cubes("training_data.nc", ["pv", "u", "v"])
-
-        # Convert to raw NumPy arrays
-        q, u, v = q.data, u.data, v.data
+    def train(training_data):
+        # Split up training data
+        q, u, v = training_data
 
         # Get dimensions
         n_time, n_lev, n_lat, n_lon = q.shape
@@ -55,17 +48,22 @@ class ThreeByThreeNN:
 
         print("Training data prepared")
 
+        model = ThreeByThreeNN.build_model()
+        model.fit(train_in, train_out, epochs=200, batch_size=128, validation_split=0.2)
+        model.save_weights(ThreeByThreeNN.weights_file)
+
+    @staticmethod
+    def build_model():
+        from keras.models import Sequential
+        from keras.layers import Dense
+
         # Build multilayer perceptron with tanh activation functions
         model = Sequential()
         model.add(Dense(n_input, input_dim=n_input, activation='tanh'))
-        for _ in range(ThreeByThreeNN.n_hidden_layers):
-            model.add(Dense(ThreeByThreeNN.n_per_hidden_layer, activation='tanh'))
+        for _ in range(BoundariesNN.n_hidden_layers):
+            model.add(Dense(BoundariesNN.n_per_hidden_layer, activation='tanh'))
         model.add(Dense(n_output, activation='tanh'))
         model.compile(loss='mean_absolute_error', optimizer='SGD', metrics=['mae'])
-
-        model.fit(train_in, train_out, epochs=200, batch_size=128, validation_split=0.2)
-
-        model.save_weights(ThreeByThreeNN.weights_file)
 
     @staticmethod
     def get_stencil(full_array, lon, lat, n_lon):

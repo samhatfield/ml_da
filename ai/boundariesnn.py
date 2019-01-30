@@ -9,16 +9,9 @@ class BoundariesNN:
     n_per_hidden_layer = 40
 
     @staticmethod
-    def train(BoundariesNN):
-        from iris import load_cubes
-        from keras.models import Sequential
-        from keras.layers import Dense
-
-        # Load training data
-        q, u, v = load_cubes("training_data.nc", ["pv", "u", "v"])
-
-        # Convert to raw NumPy arrays
-        q, u, v = q.data, u.data, v.data
+    def train(training_data):
+        # Split up training dataZ
+        q, u, v = training_data
 
         # Get dimensions
         n_time, n_lev, _, n_lon = q.shape
@@ -63,6 +56,15 @@ class BoundariesNN:
 
         print("Training data prepared")
 
+        model = BoundariesNN.build_model()
+        model.fit(train_in, train_out, epochs=200, batch_size=128, validation_split=0.2)
+        model.save_weights(BoundariesNN.weights_file)
+
+    @staticmethod
+    def build_model():
+        from keras.models import Sequential
+        from keras.layers import Dense
+
         # Build multilayer perceptron with tanh activation functions
         model = Sequential()
         model.add(Dense(n_input, input_dim=n_input, activation='tanh'))
@@ -70,10 +72,6 @@ class BoundariesNN:
             model.add(Dense(BoundariesNN.n_per_hidden_layer, activation='tanh'))
         model.add(Dense(n_output, activation='tanh'))
         model.compile(loss='mean_absolute_error', optimizer='SGD', metrics=['mae'])
-
-        model.fit(train_in, train_out, epochs=200, batch_size=128, validation_split=0.2)
-
-        model.save_weights(BoundariesNN.weights_file)
 
     @staticmethod
     def get_stencil_top(full_array, long):
