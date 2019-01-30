@@ -1,28 +1,25 @@
-import numpy as np
-from neural_net import build_model
-from numerical_model.params import params
+from argparse import ArgumentParser
+from importlib import import_module
 
-nx = int(params.nx)
+# Map command line arguments to neural net class properties
+map = {
+    "boundaries": {
+        "filename": "boundariesnn", "classname": "BoundariesNN"
+    },
+    "three_by_three": {
+        "filename": "threebythreenn", "classname": "ThreeByThreeNN"
+    }
+}
 
-# Load raw training data
-raw_training_data = np.loadtxt('training_data.txt')
+# Parse command line arguments
+parser = ArgumentParser(description="Trains the neural nets")
+parser.add_argument("neural_net", type=str, help="Which neural net to train")
+args = parser.parse_args()
 
-# Get number of training pairs
-print(f"Training with {raw_training_data.shape[0]} training pairs")
+# Instantiate instance of given neural net class
+classname = map[args.neural_net]["classname"]
+NeuralNet = getattr(import_module(map[args.neural_net]["filename"]), classname)
+print(f"Training {classname}")
 
-# Extract training data into inputs and outputs
-x_train = raw_training_data[:,:nx]
-y_train = raw_training_data[:,nx:]
-
-# Renormalise input data
-max_train = 30.0
-min_train = -20.0
-x_train = 2.0*(x_train - min_train)/(max_train - min_train) - 1.0
-
-# Build model
-model = build_model(nx, nx)
-
-# Train!
-model.fit(x_train, y_train, epochs=200,batch_size=128,validation_split=0.2)
-
-model.save_weights("weights")
+# Train neural net
+NeuralNet.train()
