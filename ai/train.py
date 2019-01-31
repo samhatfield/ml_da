@@ -14,7 +14,8 @@ map = {
 
 # Parse command line arguments
 parser = ArgumentParser(description="Trains the neural nets")
-parser.add_argument("neural_net", type=str, help="Which neural net to train")
+help_str = f'Which neural net to train ({"|".join(k for k in map)})'
+parser.add_argument("neural_net", type=str, help=help_str)
 args = parser.parse_args()
 
 # Instantiate instance of given neural net class
@@ -25,8 +26,5 @@ print(f"Training {classname}")
 # Load training data
 q, u, v = load_cubes("training_data.nc", ["pv", "u", "v"])
 
-# Convert to raw NumPy arrays
-q, u, v = q.data, u.data, v.data
-
 # Train neural net
-NeuralNet.train()
+NeuralNet.train(q.data, u.data, v.data)
