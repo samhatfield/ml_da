@@ -12,6 +12,11 @@ class BoundariesNN:
     n_hidden_layers = 2
     n_per_hidden_layer = 40
 
+    # Number of input and output variables to neural net
+    # Stencil size * number of layers * number of variables
+    n_input = 6*2*3
+    # Number of layers * number of variables
+    n_output = 2*3
     """
     Train the neural net based on the input training data of q (quasigeostrophic vorticity), u
     (zonal wind) and v (meridional wind).
@@ -29,17 +34,12 @@ class BoundariesNN:
         # * number of longitudes
         n_train = 2*(n_time-1)*2*n_lon
 
-        # Number of input and output variables to neural net
-        # Stencil size * number of layers * number of variables
-        n_input = 6*2*3
-        # Number of layers * number of variables
-        n_output = 2*3
-
-        print(f"Training with {n_train} training pairs, dimensions: ({n_input}, {n_output})")
+        print(f"Training with {n_train} training pairs,\
+            dimensions: ({BoundariesNN.n_input}, {BoundariesNN.n_output})")
 
         # Define input and output arrays
-        train_in  = np.zeros((n_train,n_input))
-        train_out = np.zeros((n_train,n_output))
+        train_in  = np.zeros((n_train,BoundariesNN.n_input))
+        train_out = np.zeros((n_train,BoundariesNN.n_output))
 
         # Prepare training data. Different grid points and time steps are considered as independent
         # training pairs. The northern and southern boundaries are also treated equivalently, only
@@ -70,7 +70,7 @@ class BoundariesNN:
 
         # Build model for training
         model = build_model(
-            n_input, n_output,
+            BoundariesNN.n_input, BoundariesNN.n_output,
             BoundariesNN.n_hidden_layers, BoundariesNN.n_per_hidden_layer
         )
 
