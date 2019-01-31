@@ -26,8 +26,8 @@ class BoundariesNN:
         from util import build_model, save_history
 
         # Get dimensions
-        n_time, n_lev, n_lat, n_lon = q.shape
-        print(f"{n_time} timesteps, {n_lev} levels, {n_lat} latitudes, {n_lon} longitudes")
+        n_lon, n_lat, n_lev, n_time = q.shape
+        print(f"{n_lon} longitudes, {n_lat} latitudes, {n_lev} levels, {n_time} timesteps")
 
         # Compute number of training pairs
         # 2 (top and bottom) * number of time steps (minus 1) * number of layers
@@ -48,22 +48,22 @@ class BoundariesNN:
         for t in range(n_time-1):
             for x in range(n_lon):
                 # Form training pairs for top of domain
-                train_in[i,:6*2]     = BoundariesNN.get_stencil(q[t,...], x, n_lon)
-                train_in[i,6*2:12*2] = BoundariesNN.get_stencil(u[t,...], x, n_lon)
-                train_in[i,12*2:]    = BoundariesNN.get_stencil(v[t,...], x, n_lon)
-                train_out[i,:2]  = q[t+1,:,0,x] - q[t,:,0,x]
-                train_out[i,2:4] = u[t+1,:,0,x] - u[t,:,0,x]
-                train_out[i,4:]  = v[t+1,:,0,x] - v[t,:,0,x]
+                train_in[i,:6*2]     = BoundariesNN.get_stencil(q[...,t], x, n_lon)
+                train_in[i,6*2:12*2] = BoundariesNN.get_stencil(u[...,t], x, n_lon)
+                train_in[i,12*2:]    = BoundariesNN.get_stencil(v[...,t], x, n_lon)
+                train_out[i,:2]  = q[x,0,:,t+1] - q[x,0,:,t]
+                train_out[i,2:4] = u[x,0,:,t+1] - u[x,0,:,t]
+                train_out[i,4:]  = v[x,0,:,t+1] - v[x,0,:,t]
                 i+=1
 
                 # Form training pairs for bottom of domain (just reverse the vertical coordinate
                 # and call the same function)
-                train_in[i,:6*2]     = BoundariesNN.get_stencil(q[t,:,::-1,:], x, n_lon)
-                train_in[i,6*2:12*2] = BoundariesNN.get_stencil(u[t,:,::-1,:], x, n_lon)
-                train_in[i,12*2:]    = BoundariesNN.get_stencil(v[t,:,::-1,:], x, n_lon)
-                train_out[i,:2]  = q[t+1,:,-1,x] - q[t,:,-1,x]
-                train_out[i,2:4] = u[t+1,:,-1,x] - u[t,:,-1,x]
-                train_out[i,4:]  = v[t+1,:,-1,x] - v[t,:,-1,x]
+                train_in[i,:6*2]     = BoundariesNN.get_stencil(q[:,::-1,:,t], x, n_lon)
+                train_in[i,6*2:12*2] = BoundariesNN.get_stencil(u[:,::-1,:,t], x, n_lon)
+                train_in[i,12*2:]    = BoundariesNN.get_stencil(v[:,::-1,:,t], x, n_lon)
+                train_out[i,:2]  = q[x,-1,:,t+1] - q[x,-1,:,t]
+                train_out[i,2:4] = u[x,-1,:,t+1] - u[x,-1,:,t]
+                train_out[i,4:]  = v[x,-1,:,t+1] - v[x,-1,:,t]
                 i+=1
 
         print("Training data prepared")
@@ -93,5 +93,5 @@ class BoundariesNN:
     @staticmethod
     def get_stencil(full_array, lon, n_lon):
         top = full_array[:,:2,:]
-        stencil = top[:,:,np.array(range(lon-1,lon+2))%n_lon]
+        stencil = top[np.array(range(lon-1,lon+2))%n_lon,:,:]
         return stencil.flatten()
