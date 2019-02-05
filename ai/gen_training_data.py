@@ -9,7 +9,10 @@ dt = float(const.dt0)
 
 # Start and end date
 start = datetime(2018,1,1)
-end   = datetime(2018,4,1)
+end   = datetime(2019,1,1)
+
+# Output file name
+output_file = "training_data.nc"
 
 # Construct range of dates for each timestep
 simul_len = (end - start).total_seconds()
@@ -25,8 +28,8 @@ x, x_north, x_south, q_north, q_south = invent_state(orog)
 q, u, v = prepare_integration(x, x_north, x_south, orog)
 
 # Set up output NetCDF file and print zeroth time step
-setup_output(start)
-output(start, start, 0, q, x, u, v)
+setup_output(output_file, start)
+output(output_file, start, start, 0, q, u, v)
 
 # Main model loop, starting from first time step
 for i, date in enumerate(date_range[1:], 1):
@@ -36,4 +39,4 @@ for i, date in enumerate(date_range[1:], 1):
     q, _, u, v = propagate(q, q_north, q_south, x_north, x_south, u, v, orog)
 
     # Output prognostic variables
-    output(start, date, i, q, x, u, v)
+    output(output_file, start, date, i, q, u, v)

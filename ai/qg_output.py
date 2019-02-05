@@ -2,12 +2,12 @@ import numpy as np
 from netCDF4 import Dataset
 from numerical_model.qg_constants import qg_constants as const
 
-def setup_output(start_date):
+def setup_output(output_file, start_date):
     nx, ny = int(const.nx), int(const.ny)
     d1, d2 = float(const.d1), float(const.d2)
 
     # Define NetCDF dataset to store all output
-    dataset = Dataset("training_data.nc", "w", format="NETCDF4_CLASSIC")
+    dataset = Dataset(output_file, "w", format="NETCDF4_CLASSIC")
 
     # Define dimensions
     timedim = dataset.createDimension("time", None)
@@ -36,9 +36,9 @@ def setup_output(start_date):
 
     dataset.close()
 
-def output(start_date, date, time_index, pv, psi, u, v):
+def output(output_file, start_date, date, time_index, pv, u, v):
     # Append latest data along time dimension
-    dataset = Dataset("training_data.nc", "a", format="NETCDF4_CLASSIC")
+    dataset = Dataset(output_file, "a", format="NETCDF4_CLASSIC")
     dataset["time"][time_index] = (date - start_date).total_seconds()/60.0
     dataset["pv"][time_index,:,:,:]  = np.transpose(pv[:,:,:])
     dataset["u"][time_index,:,:,:] = np.transpose(u[:,:,:])
