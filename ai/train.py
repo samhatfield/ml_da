@@ -26,5 +26,10 @@ print(f"Training {classname}")
 # Load training data
 q, u, v = load_cubes("training_data.nc", ["pv", "u", "v"])
 
+# Transpose data so it's lon, lat, lev, time
+q.transpose()
+u.transpose()
+v.transpose()
+
 # Train neural net
 NeuralNet.train(q.data, u.data, v.data)
