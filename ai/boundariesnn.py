@@ -26,8 +26,8 @@ class BoundariesNN:
         from util import build_model, save_history
 
         # Get dimensions
-        n_lon, n_lat, n_lev, n_time = q.shape
-        print(f"{n_lon} longitudes, {n_lat} latitudes, {n_lev} levels, {n_time} timesteps")
+        n_lon, n_lat, _, n_time = q.shape
+        print(f"{n_lon} longitudes, {n_lat} latitudes, 2 levels, {n_time} timesteps")
 
         # Compute number of training pairs
         # 2 (top and bottom) * number of time steps (minus 1) * number of layers

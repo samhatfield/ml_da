@@ -34,7 +34,7 @@ class ThreeByThreeNN:
         # Compute number of training pairs
         # number of time steps (minus 1) * number of layers
         # * number of latitudes (minus top and bottom) * number of longitudes
-        n_train = (n_time-1)*n_lev*(n_lat-2)*n_lon
+        n_train = (n_time-1)*2*(n_lat-2)*n_lon
 
         print(f"Training with {n_train} training pairs,\
             dimensions: ({ThreeByThreeNN.n_input}, {ThreeByThreeNN.n_output})")
