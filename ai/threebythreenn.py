@@ -13,6 +13,12 @@ class ThreeByThreeNN:
     n_hidden_layers = 2
     n_per_hidden_layer = 40
 
+    # Number of input and output variables to neural net
+    # Stencil size * number of layers * number of variables
+    n_input = 9*2*3
+    # Number of layers * number of variables
+    n_output = 2*3
+
     """
     Train the neural net based on the input training data of q (quasigeostrophic vorticity), u
     (zonal wind) and v (meridional wind).
@@ -30,15 +36,12 @@ class ThreeByThreeNN:
         # * number of latitudes (minus top and bottom) * number of longitudes
         n_train = (n_time-1)*n_lev*(n_lat-2)*n_lon
 
-        # Number of input and output variables to neural net
-        n_input = 9*n_lev*3
-        n_output = 3*n_lev
-
-        print(f"Training with {n_train} training pairs, dimensions: ({n_input}, {n_output})")
+        print(f"Training with {n_train} training pairs,\
+            dimensions: ({ThreeByThreeNN.n_input}, {ThreeByThreeNN.n_output})")
 
         # Define input and output arrays
-        train_in  = np.zeros((n_train,n_input))
-        train_out = np.zeros((n_train,n_output))
+        train_in  = np.zeros((n_train,ThreeByThreeNN.n_input))
+        train_out = np.zeros((n_train,ThreeByThreeNN.n_output))
 
         # Prepare training data. Different grid points and time steps are considered as independent
         # training pairs.
@@ -58,7 +61,7 @@ class ThreeByThreeNN:
 
         # Build model for training
         model = build_model(
-            n_input, n_output,
+            ThreeByThreeNN.n_input, ThreeByThreeNN.n_output,
             ThreeByThreeNN.n_hidden_layers, ThreeByThreeNN.n_per_hidden_layer
         )
 
