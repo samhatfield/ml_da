@@ -1,3 +1,6 @@
+"""
+Build the Keras model from the given model parameters.
+"""
 def build_model(n_input, n_output, n_hidden_layers, n_per_hidden_layer):
     from keras.models import Sequential
     from keras.layers import Dense
@@ -12,6 +15,9 @@ def build_model(n_input, n_output, n_hidden_layers, n_per_hidden_layer):
 
     return model
 
+"""
+Take the history object returned by keras.models.fit and output the columns to a text file.
+"""
 def save_history(filename, history):
     import numpy as np
 
