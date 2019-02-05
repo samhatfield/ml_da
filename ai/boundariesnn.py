@@ -66,6 +66,9 @@ class BoundariesNN:
                 train_out[i,4:]  = v[x,-1,:,t+1] - v[x,-1,:,t]
                 i+=1
 
+        # Normalize input
+        train_in = BoundariesNN.normalize(train_in)
+
         print("Training data prepared")
 
         # Build model for training
@@ -95,3 +98,20 @@ class BoundariesNN:
         top = full_array[:,:2,:]
         stencil = top[np.array(range(lon-1,lon+2))%n_lon,:,:]
         return stencil.flatten()
+
+    """
+    Normalize the given training data so values are between -1.0 and 1.0.
+    """
+    @staticmethod
+    def normalize(training_data):
+        # Maximum and minimum values of q, u, and v based on a long run of the numerical model
+        q_max, q_min = 40.0, -37.0
+        u_max, u_min = 10.0, -6.0
+        v_max, v_min = 2.0, -2.0
+
+        # Normalize the training data
+        normalized = training_data[:,:]
+        normalized[:,:6*2]     = 2.0*(normalized[:,:6*2]     - q_min)/(q_max - q_min) - 1.0
+        normalized[:,6*2:12*2] = 2.0*(normalized[:,6*2:12*2] - u_min)/(u_max - u_min) - 1.0
+        normalized[:,12*2:]    = 2.0*(normalized[:,12*2:]    - v_min)/(v_max - v_min) - 1.0
+        return normalized

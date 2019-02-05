@@ -57,6 +57,9 @@ class ThreeByThreeNN:
                     train_out[i,4:]  = v[x,y,:,t+1] - v[x,y,:,t]
                     i+=1
 
+        # Normalize input
+        train_in = ThreeByThreeNN.normalize(train_in)
+
         print("Training data prepared")
 
         # Build model for training
@@ -87,3 +90,20 @@ class ThreeByThreeNN:
     def get_stencil(full_array, lon, lat, n_lon):
         stencil = full_array[np.array(range(lon-1,lon+2))%n_lon,lat-1:lat+2,:]
         return stencil.flatten()
+
+    """
+    Normalize the given training data so values are between -1.0 and 1.0.
+    """
+    @staticmethod
+    def normalize(training_data):
+        # Maximum and minimum values of q, u, and v based on a long run of the numerical model
+        q_max, q_min = 40.0, -37.0
+        u_max, u_min = 10.0, -6.0
+        v_max, v_min = 2.0, -2.0
+
+        # Normalize the training data
+        normalized = training_data[:,:]
+        normalized[:,:9*2]     = 2.0*(normalized[:,:9*2]     - q_min)/(q_max - q_min) - 1.0
+        normalized[:,9*2:18*2] = 2.0*(normalized[:,9*2:18*2] - u_min)/(u_max - u_min) - 1.0
+        normalized[:,18*2:]    = 2.0*(normalized[:,18*2:]    - v_min)/(v_max - v_min) - 1.0
+        return normalized
