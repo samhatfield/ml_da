@@ -22,8 +22,8 @@ class ThreeByThreeNN:
         from util import build_model, save_history
 
         # Get dimensions
-        n_time, n_lev, n_lat, n_lon = q.shape
-        print(f"{n_time} timesteps, {n_lev} levels, {n_lat} latitudes, {n_lon} longitudes")
+        n_lon, n_lat, _, n_time = q.shape
+        print(f"{n_lon} longitudes, {n_lat} latitudes, 2 levels, {n_time} timesteps")
 
         # Compute number of training pairs
         # number of time steps (minus 1) * number of layers
@@ -46,12 +46,12 @@ class ThreeByThreeNN:
         for t in range(n_time-1):
             for x in range(n_lon):
                 for y in range(1,n_lat-1):
-                    train_in[i,:9*n_lev]         = ThreeByThreeNN.get_stencil(q[t,...], x, y, n_lon)
-                    train_in[i,9*n_lev:18*n_lev] = ThreeByThreeNN.get_stencil(u[t,...], x, y, n_lon)
-                    train_in[i,18*n_lev:]        = ThreeByThreeNN.get_stencil(v[t,...], x, y, n_lon)
-                    train_out[i,:2]  = q[t+1,:,y,x] - q[t,:,y,x]
-                    train_out[i,2:4] = u[t+1,:,y,x] - u[t,:,y,x]
-                    train_out[i,4:]  = v[t+1,:,y,x] - v[t,:,y,x]
+                    train_in[i,:9*2]     = ThreeByThreeNN.get_stencil(q[...,t], x, y, n_lon)
+                    train_in[i,9*2:18*2] = ThreeByThreeNN.get_stencil(u[...,t], x, y, n_lon)
+                    train_in[i,18*2:]    = ThreeByThreeNN.get_stencil(v[...,t], x, y, n_lon)
+                    train_out[i,:2]  = q[x,y,:,t+1] - q[x,y,:,t]
+                    train_out[i,2:4] = u[x,y,:,t+1] - u[x,y,:,t]
+                    train_out[i,4:]  = v[x,y,:,t+1] - v[x,y,:,t]
                     i+=1
 
         print("Training data prepared")
@@ -82,5 +82,5 @@ class ThreeByThreeNN:
     """
     @staticmethod
     def get_stencil(full_array, lon, lat, n_lon):
-        stencil = full_array[:,lat-1:lat+2,np.array(range(lon-1,lon+2))%n_lon]
+        stencil = full_array[np.array(range(lon-1,lon+2))%n_lon,lat-1:lat+2,:]
         return stencil.flatten()
