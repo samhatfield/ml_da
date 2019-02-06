@@ -1,4 +1,5 @@
 import numpy as np
+from boundariesnn import BoundariesNN
 
 class ThreeByThreeNN:
     """
@@ -18,6 +19,103 @@ class ThreeByThreeNN:
     n_input = 9*2*3
     # Number of layers * number of variables
     n_output = 2*3
+
+    def __init__(self):
+        from numerical_model.qg_constants import qg_constants as const
+        from util import build_model
+
+        # Build model for inference of boundary variables
+        self.boundariesnn = BoundariesNN()
+
+        # Build model for inference of interior of model domain
+        self.three_by_three_model = build_model(
+            ThreeByThreeNN.n_input, ThreeByThreeNN.n_output,
+            ThreeByThreeNN.n_hidden_layers, ThreeByThreeNN.n_per_hidden_layer
+        )
+
+        # Try loading weights file
+        try:
+            self.three_by_three_model.load_weights(f"{ThreeByThreeNN.out_file}.hdf", by_name=False)
+        except OSError as e:
+            print("Weights file for ThreeByThreeNN doesn't exist\nHave you trained this model yet?")
+            raise e
+
+        # Store number of longitudes and latitudes
+        self.n_lon = int(const.nx)
+        self.n_lat = int(const.ny)
+
+        # Stores Adams-Bashforth steps
+        self.q_tends = np.zeros((3,self.n_lon,self.n_lat,2))
+        self.u_tends = np.zeros((3,self.n_lon,self.n_lat,2))
+        self.v_tends = np.zeros((3,self.n_lon,self.n_lat,2))
+        self.mode = 0
+
+    """
+    Advance variables by one time step.
+    """
+    def step(self, q, u, v):
+        self.q_tends = np.roll(self.q_tends, 1, axis=0)
+        self.u_tends = np.roll(self.u_tends, 1, axis=0)
+        self.v_tends = np.roll(self.v_tends, 1, axis=0)
+
+        # Prepare input array for neural net
+        infer_in = np.zeros((self.n_lon*(self.n_lat-2),9*2*3))
+
+        # Loop over all longitudes and latitudes
+        i = 0
+        for x in range(self.n_lon):
+            for y in range(1,self.n_lat-1):
+                infer_in[i,:9*2]     = ThreeByThreeNN.get_stencil(q, x, y, self.n_lon)
+                infer_in[i,9*2:18*2] = ThreeByThreeNN.get_stencil(u, x, y, self.n_lon)
+                infer_in[i,18*2:]    = ThreeByThreeNN.get_stencil(v, x, y, self.n_lon)
+                i+=1
+
+        infer_in = ThreeByThreeNN.normalize(infer_in)
+
+        # Predict new tendencies (tendencies include dt term)
+        tendencies = self.three_by_three_model.predict(infer_in, batch_size=1)
+
+        # Unpack tendencies
+        self.q_tends[0,:,1:-1,0] = tendencies[:,0].reshape((self.n_lon,self.n_lat-2))
+        self.q_tends[0,:,1:-1,1] = tendencies[:,1].reshape((self.n_lon,self.n_lat-2))
+        self.u_tends[0,:,1:-1,0] = tendencies[:,2].reshape((self.n_lon,self.n_lat-2))
+        self.u_tends[0,:,1:-1,1] = tendencies[:,3].reshape((self.n_lon,self.n_lat-2))
+        self.v_tends[0,:,1:-1,0] = tendencies[:,4].reshape((self.n_lon,self.n_lat-2))
+        self.v_tends[0,:,1:-1,1] = tendencies[:,5].reshape((self.n_lon,self.n_lat-2))
+        # self.q_tends[0,:,1:-1,:] = tendencies[:,:2].reshape((self.n_lon,self.n_lat-2,2))
+        # self.u_tends[0,:,1:-1,:] = tendencies[:,2:4].reshape((self.n_lon,self.n_lat-2,2))
+        # self.v_tends[0,:,1:-1,:] = tendencies[:,4:].reshape((self.n_lon,self.n_lat-2,2))
+
+        # Compute tendencies for boundaries
+        q_tend_bound, u_tend_bound, v_tend_bound = self.boundariesnn.get_tend(q, u, v)
+        self.q_tends[0,:,0,:]  = q_tend_bound[:,0,:]
+        self.q_tends[0,:,-1,:] = q_tend_bound[:,1,:]
+        self.u_tends[0,:,0,:]  = u_tend_bound[:,0,:]
+        self.u_tends[0,:,-1,:] = u_tend_bound[:,1,:]
+        self.v_tends[0,:,0,:]  = v_tend_bound[:,0,:]
+        self.v_tends[0,:,-1,:] = v_tend_bound[:,1,:]
+
+        # 3rd order Adams-Bashforth
+        if self.mode == 0:
+            q_tend = self.q_tends[0,...]
+            u_tend = self.u_tends[0,...]
+            v_tend = self.v_tends[0,...]
+            self.mode = 1
+        elif self.mode == 1:
+            q_tend = 1.5*self.q_tends[0,...] - 0.5*self.q_tends[1,...]
+            u_tend = 1.5*self.u_tends[0,...] - 0.5*self.u_tends[1,...]
+            v_tend = 1.5*self.v_tends[0,...] - 0.5*self.v_tends[1,...]
+            self.mode = 2
+        else:
+            q_tend = (23.0/12.0)*self.q_tends[0,...] - (4.0/3.0)*self.q_tends[1,...] \
+                + (5.0/12.0)*self.q_tends[2,...]
+            u_tend = (23.0/12.0)*self.u_tends[0,...] - (4.0/3.0)*self.u_tends[1,...] \
+                + (5.0/12.0)*self.u_tends[2,...]
+            v_tend = (23.0/12.0)*self.v_tends[0,...] - (4.0/3.0)*self.v_tends[1,...] \
+                + (5.0/12.0)*self.v_tends[2,...]
+
+        # Step forward using forward Euler
+        return q + q_tend, u + u_tend, v + v_tend
 
     """
     Train the neural net based on the input training data of q (quasigeostrophic vorticity), u
