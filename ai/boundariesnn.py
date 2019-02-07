@@ -85,9 +85,50 @@ class BoundariesNN:
     (zonal wind) and v (meridional wind).
     """
     @staticmethod
-    def train(q, u, v):
+    def train():
         from util import build_model, save_history
+        from iris import load_cubes
 
+        # Attempt to load processed training data
+        print("Attempting to load prepared training data")
+        try:
+            training_data = np.load(f"{BoundariesNN.out_file}_training_data.npz")
+
+            # Split up training data into input and output
+            train_in, train_out  = training_data["train_in"], training_data["train_out"]
+        except FileNotFoundError:
+            print("Prepared training data not found. Preparing now...")
+
+            # Load training data
+            q, u, v = load_cubes("training_data.nc", ["pv", "u", "v"])
+
+            # Transpose data so it's lon, lat, lev, time
+            q.transpose()
+            u.transpose()
+            v.transpose()
+
+            train_in, train_out = BoundariesNN.prepare_training_data(q.data, u.data, v.data)
+
+            print("Training data prepared")
+
+        print(f"Training with {train_in.shape[0]} training pairs,\
+            dimensions: ({BoundariesNN.n_input}, {BoundariesNN.n_output})")
+
+        # Build model for training
+        model = build_model(
+            BoundariesNN.n_input, BoundariesNN.n_output,
+            BoundariesNN.n_hidden_layers, BoundariesNN.n_per_hidden_layer
+        )
+
+        # Train!
+        history = model.fit(train_in, train_out, epochs=200, batch_size=128, validation_split=0.2)
+
+        # Output weights and diagnostics files
+        save_history(f"{BoundariesNN.out_file}_history.txt", history)
+        model.save_weights(f"{BoundariesNN.out_file}.hdf")
+
+    @staticmethod
+    def prepare_training_data(q, u, v):
         # Get dimensions
         n_lon, n_lat, _, n_time = q.shape
         print(f"{n_lon} longitudes, {n_lat} latitudes, 2 levels, {n_time} timesteps")
@@ -96,9 +137,6 @@ class BoundariesNN:
         # 2 (top and bottom) * number of time steps (minus 1) * number of layers
         # * number of longitudes
         n_train = 2*(n_time-1)*2*n_lon
-
-        print(f"Training with {n_train} training pairs,\
-            dimensions: ({BoundariesNN.n_input}, {BoundariesNN.n_output})")
 
         # Define input and output arrays
         train_in  = np.zeros((n_train,BoundariesNN.n_input))
@@ -132,20 +170,9 @@ class BoundariesNN:
         # Normalize input
         train_in = BoundariesNN.normalize(train_in)
 
-        print("Training data prepared")
-
-        # Build model for training
-        model = build_model(
-            BoundariesNN.n_input, BoundariesNN.n_output,
-            BoundariesNN.n_hidden_layers, BoundariesNN.n_per_hidden_layer
-        )
-
-        # Train!
-        history = model.fit(train_in, train_out, epochs=200, batch_size=128, validation_split=0.2)
-
-        # Output weights and diagnostics files
-        save_history(f"{BoundariesNN.out_file}_history.txt", history)
-        model.save_weights(f"{BoundariesNN.out_file}.hdf")
+        np.savez(f"{BoundariesNN.out_file}_training_data.npz",\
+            train_in=train_in, train_out=train_out)
+        return train_in, train_out
 
     """
     Extracts the stencil corresponding to the requested longitude.

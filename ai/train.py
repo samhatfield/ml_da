@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from importlib import import_module
-from iris import load_cubes
 
 # Map command line arguments to neural net class properties
 map = {
@@ -23,13 +22,5 @@ classname = map[args.neural_net]["classname"]
 NeuralNet = getattr(import_module(map[args.neural_net]["filename"]), classname)
 print(f"Training {classname}")
 
-# Load training data
-q, u, v = load_cubes("training_data.nc", ["pv", "u", "v"])
-
-# Transpose data so it's lon, lat, lev, time
-q.transpose()
-u.transpose()
-v.transpose()
-
 # Train neural net
-NeuralNet.train(q.data, u.data, v.data)
+NeuralNet.train()
