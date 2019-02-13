@@ -136,7 +136,7 @@ class BoundariesNN:
         # Compute number of training pairs
         # 2 (top and bottom) * number of time steps (minus 1) * number of layers
         # * number of longitudes
-        n_train = 2*(n_time-1)*2*n_lon
+        n_train = 2*(n_time-1)*n_lon
 
         # Define input and output arrays
         train_in  = np.zeros((n_train,BoundariesNN.n_input))

@@ -173,7 +173,7 @@ class ThreeByThreeNN:
         # Compute number of training pairs
         # number of time steps (minus 1) * number of layers
         # * number of latitudes (minus top and bottom) * number of longitudes
-        n_train = (n_time-1)*2*(n_lat-2)*n_lon
+        n_train = (n_time-1)*(n_lat-2)*n_lon
 
         # Define input and output arrays
         train_in  = np.zeros((n_train,ThreeByThreeNN.n_input))
