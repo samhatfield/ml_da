@@ -22,6 +22,6 @@ args = parser.parse_args()
 diagnostics = np.loadtxt(f"{map[args.neural_net]}_history.txt")
 
 plt.plot(diagnostics[:,0], label="val\_loss")
-plt.plot(diagnostics[:,2], label="loss")
+plt.plot(diagnostics[:,1], label="loss")
 plt.legend()
 plt.show()
