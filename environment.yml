@@ -1,8 +1,8 @@
-name: lorenz96_machine_learning
+name: ml_da
 
 dependencies:
 - python=3.6
-- numpy
+- numpy=1.15.4
 - keras
 - seaborn
 - matplotlib
