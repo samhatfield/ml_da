@@ -9,7 +9,10 @@ dt = float(const.dt0)
 
 # Start and end date
 start = datetime(2018,1,1)
-end   = datetime(2019,1,1)
+end   = datetime(2019,4,1)
+
+# Date by which spin up should be completed
+spin_up_complete = datetime(2018,4,1)
 
 # Output file name
 output_file = "training_data.nc"
@@ -27,16 +30,18 @@ x, x_north, x_south, q_north, q_south = invent_state(orog)
 # Get PV and wind from streamfunction
 q, u, v = prepare_integration(x, x_north, x_south, orog)
 
-# Set up output NetCDF file and print zeroth time step
-setup_output(output_file, start)
-output(output_file, start, start, 0, q, u, v)
-
 # Main model loop, starting from first time step
-for i, date in enumerate(date_range[1:], 1):
+i = 0
+for date in date_range[1:]:
     print(f"Integrating {date}")
 
     # Compute time step
     q, _, u, v = propagate(q, q_north, q_south, x_north, x_south, u, v, orog)
 
     # Output prognostic variables
-    output(output_file, start, date, i, q, u, v)
+    if date >= spin_up_complete:
+        # Set up output NetCDF file
+        if date == spin_up_complete:
+            setup_output(output_file, spin_up_complete)
+        output(output_file, spin_up_complete, date, i, q, u, v)
+        i+=1
