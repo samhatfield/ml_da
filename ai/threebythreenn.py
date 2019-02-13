@@ -158,7 +158,7 @@ class ThreeByThreeNN:
         )
 
         # Train!
-        history = model.fit(train_in, train_out, epochs=200, batch_size=128, validation_split=0.2)
+        history = model.fit(train_in, train_out, epochs=20, batch_size=128, validation_split=0.2)
 
         # Output weights and diagnostics files
         save_history(f"{ThreeByThreeNN.out_file}_history.txt", history)
