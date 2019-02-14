@@ -128,6 +128,7 @@ class ThreeByThreeNN:
     def train():
         from util import build_model, save_history
         from iris import load_cubes
+        from numpy.random import shuffle
 
         # Attempt to load processed training data
         print("Attempting to load prepared training data")
@@ -159,6 +160,13 @@ class ThreeByThreeNN:
             ThreeByThreeNN.n_input, ThreeByThreeNN.n_output,
             ThreeByThreeNN.n_hidden_layers, ThreeByThreeNN.n_per_hidden_layer
         )
+
+        # Shuffle training data
+        print("Shuffling training data")
+        indices = np.arange(train_in.shape[0], dtype=np.int32)
+        shuffle(indices)
+        train_in  = train_in[indices,:]
+        train_out = train_out[indices,:]
 
         # Train!
         history = model.fit(train_in, train_out, epochs=20, batch_size=128, validation_split=0.2)
