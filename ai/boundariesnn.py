@@ -59,10 +59,13 @@ class BoundariesNN:
             i+=1
 
         # Normalize input
-        infer_in = BoundariesNN.normalize(infer_in)
+        infer_in = BoundariesNN.normalize_input(infer_in)
 
         # Predict new tendencies (tendencies include dt term)
         tendencies = self.model.predict(infer_in, batch_size=1)
+
+        # Denormalize output
+        tendencies = BoundariesNN.denormalize_output(tendencies)
 
         # Unpack tendencies
         q_tend = np.zeros((self.n_lon,2,2))
@@ -167,8 +170,9 @@ class BoundariesNN:
                 train_out[i,4:]  = v[x,-1,:,t+1] - v[x,-1,:,t]
                 i+=1
 
-        # Normalize input
-        train_in = BoundariesNN.normalize(train_in)
+        # Normalize training data
+        train_in  = BoundariesNN.normalize_input(train_in)
+        train_out = BoundariesNN.normalize_output(train_out)
 
         np.savez(f"{BoundariesNN.out_file}_training_data.npz",\
             train_in=train_in, train_out=train_out)
@@ -190,10 +194,10 @@ class BoundariesNN:
         return stencil.flatten()
 
     """
-    Normalize the given training data so values are between -1.0 and 1.0.
+    Normalize the given input training data so values are between -1.0 and 1.0.
     """
     @staticmethod
-    def normalize(training_data):
+    def normalize_input(training_data):
         # Maximum and minimum values of q, u, and v based on a long run of the numerical model
         q_max, q_min = 40.0, -37.0
         u_max, u_min = 10.0, -6.0
@@ -205,3 +209,39 @@ class BoundariesNN:
         normalized[:,6*2:12*2] = 2.0*(normalized[:,6*2:12*2] - u_min)/(u_max - u_min) - 1.0
         normalized[:,12*2:]    = 2.0*(normalized[:,12*2:]    - v_min)/(v_max - v_min) - 1.0
         return normalized
+
+    """
+    Normalize the given output training data so values are between -1.0 and 1.0.
+    """
+    @staticmethod
+    def normalize_output(training_data):
+        # Maximum and minimum values of tendencies of q, u, and v based on a long run of the
+        # numerical model
+        q_max, q_min = 0.6191, -0.6593
+        u_max, u_min = 0.0886, -0.0938
+        v_max, v_min = 0.0837, -0.0513
+
+        # Normalize the training data
+        normalized = training_data[:,:]
+        normalized[:,:2]  = 2.0*(normalized[:,:2]  - q_min)/(q_max - q_min) - 1.0
+        normalized[:,2:4] = 2.0*(normalized[:,2:4] - u_min)/(u_max - u_min) - 1.0
+        normalized[:,4:]  = 2.0*(normalized[:,4:]  - v_min)/(v_max - v_min) - 1.0
+        return normalized
+
+    """
+    Denormalize the given output.
+    """
+    @staticmethod
+    def denormalize_output(output):
+        # Maximum and minimum values of tendencies of q, u, and v based on a long run of the
+        # numerical model
+        q_max, q_min = 0.6191, -0.6593
+        u_max, u_min = 0.0886, -0.0938
+        v_max, v_min = 0.0837, -0.0513
+
+        # Denormalize the output
+        denormalized = output[:,:]
+        denormalized[:,:2]  = (q_max - q_min)*(1.0 + denormalized[:,:2])/2.0  + q_min
+        denormalized[:,2:4] = (u_max - u_min)*(1.0 + denormalized[:,2:4])/2.0 + u_min
+        denormalized[:,4:]  = (v_max - v_min)*(1.0 + denormalized[:,4:])/2.0  + v_min
+        return denormalized
