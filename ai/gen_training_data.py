@@ -36,12 +36,12 @@ for date in date_range[1:]:
     print(f"Integrating {date}")
 
     # Compute time step
-    q, _, u, v = propagate(q, q_north, q_south, x_north, x_south, u, v, orog)
+    q, 𝛙, u, v = propagate(q, q_north, q_south, x_north, x_south, u, v, orog)
 
     # Output prognostic variables
     if date >= spin_up_complete:
         # Set up output NetCDF file
         if date == spin_up_complete:
             setup_output(output_file, spin_up_complete)
-        output(output_file, spin_up_complete, date, i, q, u, v)
+        output(output_file, spin_up_complete, date, i, q, 𝛙, u, v)
         i+=1

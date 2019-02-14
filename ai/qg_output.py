@@ -26,6 +26,7 @@ def setup_output(output_file, start_date):
 
     # Define multidimensional variables
     pv  = dataset.createVariable("pv",  np.float32, ("time", "lev", "j", "i"))
+    𝛙 = dataset.createVariable("psi", np.float32, ("time", "lev", "j", "i"))
     u   = dataset.createVariable("u",   np.float32, ("time", "lev", "j", "i"))
     v   = dataset.createVariable("v",   np.float32, ("time", "lev", "j", "i"))
 
@@ -36,11 +37,12 @@ def setup_output(output_file, start_date):
 
     dataset.close()
 
-def output(output_file, start_date, date, time_index, pv, u, v):
+def output(output_file, start_date, date, time_index, pv, 𝛙, u, v):
     # Append latest data along time dimension
     dataset = Dataset(output_file, "a", format="NETCDF4_CLASSIC")
     dataset["time"][time_index] = (date - start_date).total_seconds()/60.0
     dataset["pv"][time_index,:,:,:]  = np.transpose(pv[:,:,:])
+    dataset["psi"][time_index,:,:,:] = np.transpose(𝛙[:,:,:])
     dataset["u"][time_index,:,:,:] = np.transpose(u[:,:,:])
     dataset["v"][time_index,:,:,:] = np.transpose(v[:,:,:])
     dataset.close()
