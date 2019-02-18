@@ -6,6 +6,7 @@ from qg_output import setup_output, output
 from datetime import datetime, timedelta
 from iris import load_cube, Constraint
 import numpy as np
+from sys import argv
 
 # Model time step
 dt = float(const.dt0)
@@ -34,7 +35,9 @@ dummy = np.zeros(𝛙.shape)
 setup_output(output_file, start)
 output(output_file, start, start, 0, dummy, 𝛙, dummy, dummy)
 
-forecaster = ThreeByThreeNN()
+stencil = int(argv[1])
+
+forecaster = InteriorNN(stencil)
 
 # Main model loop, starting from first time step
 for i, date in enumerate(date_range[1:], 1):
