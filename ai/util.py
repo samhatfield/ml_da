@@ -11,7 +11,7 @@ def build_model(n_input, n_output, n_hidden_layers, n_per_hidden_layer):
     for _ in range(n_hidden_layers):
         model.add(Dense(n_per_hidden_layer, activation='relu'))
     model.add(Dense(n_output, activation='linear'))
-    model.compile(loss='mae', optimizer='adam')
+    model.compile(loss='mae', optimizer='adam', metrics=[corr])
 
     return model
 
@@ -24,5 +24,16 @@ def save_history(filename, history):
     output = np.vstack([
         history.history["val_loss"],
         history.history["loss"],
+        history.history["val_corr"],
+        history.history["corr"]
     ])
     np.savetxt(filename, output.T)
+
+"""
+Keras metric for computing the correlation between the actual value (x) predicted value (y).
+"""
+def corr(x, y):
+    from keras import backend as b
+
+    x_m, y_m = b.mean(x), b.mean(y)
+    return b.sum((y - y_m)*(x - x_m))/b.sqrt(b.sum(b.square(y - y_m))*(b.sum(b.square(x - x_m))))
