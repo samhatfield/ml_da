@@ -32,7 +32,14 @@ if args.neural_net == "BoundariesNN":
 else:
     diagnostics = np.loadtxt(f"interior_{args.stencil}_history.txt")
 
-plt.plot(diagnostics[:,0], label="val\_loss")
-plt.plot(diagnostics[:,1], label="loss")
+ax1 = plt.subplot(211)
+ax1.plot(diagnostics[:,0], label="validation data")
+ax1.plot(diagnostics[:,1], label="training data")
+ax1.set_ylabel("Mean average error")
+ax2 = plt.subplot(212, sharex=ax1)
+ax2.plot(diagnostics[:,2], label="validation data")
+ax2.plot(diagnostics[:,3], label="training data")
+ax2.set_ylabel("Correlation")
+ax2.set_xlabel("Epoch")
 plt.legend()
 plt.show()
