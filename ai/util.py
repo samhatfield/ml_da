@@ -11,7 +11,7 @@ def build_model(n_input, n_output, n_hidden_layers, n_per_hidden_layer):
     for _ in range(n_hidden_layers):
         model.add(Dense(n_per_hidden_layer, activation='relu'))
     model.add(Dense(n_output, activation='linear'))
-    model.compile(loss='mae', optimizer='adam', metrics=[corr])
+    model.compile(loss='mse', optimizer='adam', metrics=[corr])
 
     return model
 
