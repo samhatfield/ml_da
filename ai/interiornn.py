@@ -41,7 +41,7 @@ class InteriorNN:
             self.interior_model.load_weights(f"{self.out_file}.hdf", by_name=False)
         except OSError as e:
             print(f"File {self.out_file}.hdf doesn't exist")
-            print("Have you trained self model yet?")
+            print("Have you trained this model yet?")
             raise e
 
         # Store number of longitudes and latitudes
