@@ -1,17 +1,25 @@
+from argparse import ArgumentParser
 from interiornn import InteriorNN
 from numerical_model.qg_constants import qg_constants as const
 from qg_output import setup_output, output
 from datetime import datetime, timedelta
 from iris import load_cube, Constraint
 import numpy as np
-from sys import argv
+
+# Parse command line arguments
+parser = ArgumentParser(description="Runs a neural net-based forecast")
+parser.add_argument("stencil", help="What stencil size to use for the forecast")
+args = parser.parse_args()
+stencil = int(args.stencil)
+
+print(f"Forecasting with {stencil}x{stencil} stencil")
 
 # Model time step
 dt = float(const.dt0)
 
 # Start and end date
-start = datetime(2018,6,1)
-end   = datetime(2018,6,4)
+start = datetime(2018,4,1)
+end   = datetime(2018,4,4)
 
 # Output file name
 output_file = "neural_net.nc"
@@ -21,19 +29,13 @@ simul_len = (end - start).total_seconds()
 date_range = [start + timedelta(seconds=i*dt) for i in range(int(simul_len/dt))]
 
 # Get initial condition
-time_constraint = Constraint(time=lambda t: t > start and t <= end)
-𝛙_real = load_cube("training_data.nc", ["psi"])
-𝛙_real = 𝛙_real.extract(time_constraint)
-𝛙_real.transpose()
-
-𝛙 = 𝛙_real[...,0].data.copy()
+𝛙 = load_cube("training_data/training_data.nc",
+              Constraint(name="psi", time=lambda t: t == start)).data.T.copy()
 dummy = np.zeros(𝛙.shape)
 
 # Set up output NetCDF file and print zeroth time step
 setup_output(output_file, start)
 output(output_file, start, start, 0, dummy, 𝛙, dummy, dummy)
-
-stencil = int(argv[1])
 
 forecaster = InteriorNN(stencil)
 
