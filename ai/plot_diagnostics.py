@@ -42,4 +42,8 @@ ax2.plot(diagnostics[:,3], label="training data")
 ax2.set_ylabel("Correlation")
 ax2.set_xlabel("Epoch")
 plt.legend()
+if args.neural_net == "boundaries":
+    plt.savefig("plots/boundaries_diag.pdf")
+else:
+    plt.savefig(f"plots/interior_{args.stencil}_diag.pdf")
 plt.show()
