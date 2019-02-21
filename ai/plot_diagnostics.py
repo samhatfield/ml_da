@@ -28,9 +28,9 @@ if args.stencil == -1 and args.neural_net == "interior":
     raise ValueError("If you want to plot InteriorNN diagnostics you must provide a stencil size")
 
 if args.neural_net == "BoundariesNN":
-    diagnostics = np.loadtxt(f"boundariesnn_history.txt")
+    diagnostics = np.loadtxt(f"models/boundariesnn_history.txt")
 else:
-    diagnostics = np.loadtxt(f"interior_{args.stencil}_history.txt")
+    diagnostics = np.loadtxt(f"models/interior_{args.stencil}_history.txt")
 
 ax1 = plt.subplot(211)
 ax1.plot(diagnostics[:,0], label="validation data")

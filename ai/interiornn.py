@@ -14,6 +14,9 @@ class InteriorNN:
     # Number of output variables to neural net (just the number of layers)
     n_output = 2
 
+    # Fraction of raw training data to use for validation
+    val_frac = 0.2
+
     def __init__(self, stencil):
         from numerical_model.qg_constants import qg_constants as const
         from util import build_model
@@ -38,9 +41,9 @@ class InteriorNN:
 
         # Try loading weights file
         try:
-            self.interior_model.load_weights(f"{self.out_file}.hdf", by_name=False)
+            self.interior_model.load_weights(f"models/{self.out_file}.hdf", by_name=False)
         except OSError as e:
-            print(f"File {self.out_file}.hdf doesn't exist")
+            print(f"File models/{self.out_file}.hdf doesn't exist")
             print("Have you trained this model yet?")
             raise e
 
@@ -107,25 +110,26 @@ class InteriorNN:
     def train(stencil):
         from util import build_model, save_history
         from iris import load_cube
-        from numpy.random import shuffle
 
         # Attempt to load processed training data
         print("Attempting to load prepared training data")
         try:
-            training_data = np.load(f"interior_{stencil}_training_data.npz")
+            training_data   = np.load(f"training_data/interior_{stencil}_training_data.npz")
+            validation_data = np.load(f"training_data/interior_{stencil}_validation_data.npz")
 
-            # Split up training data into input and output
+            # Split up training and validation data into input and output
             train_in, train_out  = training_data["train_in"], training_data["train_out"]
+            val_in, val_out      = validation_data["val_in"], validation_data["val_out"]
         except FileNotFoundError:
             print("Prepared training data not found. Preparing now...")
 
             # Load training data
-            𝛙 = load_cube("training_data.nc", ["psi"])
+            𝛙 = load_cube("training_data/training_data.nc", ["psi"])
 
             # Transpose data so it's lon, lat, lev, time
             𝛙.transpose()
 
-            train_in, train_out = InteriorNN.prepare_training_data(𝛙.data, stencil)
+            train_in, train_out, val_in, val_out = InteriorNN.prepare_training_data(𝛙.data, stencil)
 
             print("Training data prepared")
 
@@ -138,22 +142,21 @@ class InteriorNN:
             InteriorNN.n_hidden_layers, InteriorNN.n_per_hidden_layer
         )
 
-        # Shuffle training data
-        print("Shuffling training data")
-        indices = np.arange(train_in.shape[0], dtype=np.int32)
-        shuffle(indices)
-        train_in  = train_in[indices,:]
-        train_out = train_out[indices,:]
-
         # Train!
-        history = model.fit(train_in, train_out, epochs=20, batch_size=128, validation_split=0.2)
+        history = model.fit(train_in, train_out, epochs=20, batch_size=128,\
+            validation_data=(val_in, val_out))
 
         # Output weights and diagnostics files
-        save_history(f"interior_{stencil}_history.txt", history)
-        model.save_weights(f"interior_{stencil}.hdf")
+        save_history(f"models/interior_{stencil}_history.txt", history)
+        model.save_weights(f"models/interior_{stencil}.hdf")
 
+    """
+    Prepare training data, including validation split.
+    """
     @staticmethod
     def prepare_training_data(𝛙, stencil):
+        from numpy.random import shuffle
+
         # Get dimensions
         n_lon, n_lat, _, n_time = 𝛙.shape
         print(f"{n_lon} longitudes, {n_lat} latitudes, 2 levels, {n_time} timesteps")
@@ -164,8 +167,8 @@ class InteriorNN:
         n_train = (n_time-1)*(n_lat-(stencil-1))*n_lon
 
         # Define input and output arrays
-        train_in  = np.zeros((n_train,2*stencil**2))
-        train_out = np.zeros((n_train,InteriorNN.n_output))
+        train_in_all  = np.zeros((n_train,2*stencil**2))
+        train_out_all = np.zeros((n_train,InteriorNN.n_output))
 
         # How many rows to skip, depending on stencil size
         skip = int((stencil-1)/2)
@@ -176,16 +179,31 @@ class InteriorNN:
         for t in range(n_time-1):
             for x in range(n_lon):
                 for y in range(skip,n_lat-skip):
-                    train_in[i,:]  = InteriorNN.get_stencil(𝛙[...,t], x, y, n_lon, stencil)
-                    train_out[i,:] = 𝛙[x,y,:,t+1] - 𝛙[x,y,:,t]
-                    i+=1
+                    train_in_all[i,:]  = InteriorNN.get_stencil(𝛙[...,t], x, y, n_lon, stencil)
+                    train_out_all[i,:] = 𝛙[x,y,:,t+1] - 𝛙[x,y,:,t]
+                    i += 1
 
-        # Normalize input
-        train_in  = InteriorNN.normalize_input(train_in)
-        train_out = InteriorNN.normalize_output(train_out)
+        # Normalize training data
+        train_in_all  = InteriorNN.normalize_input(train_in_all)
+        train_out_all = InteriorNN.normalize_output(train_out_all)
 
-        np.savez(f"interior_{stencil}_training_data.npz", train_in=train_in, train_out=train_out)
-        return train_in, train_out
+        # Shuffle training data and extract validation set
+        indices = np.arange(n_train, dtype=np.int32)
+        shuffle(indices)
+        train_indices = indices[:-int(InteriorNN.val_frac*n_train)]
+        val_indices   = indices[-int(InteriorNN.val_frac*n_train):]
+        train_in  = train_in_all[train_indices,:]
+        train_out = train_out_all[train_indices,:]
+        val_in    = train_in_all[val_indices,:]
+        val_out   = train_out_all[val_indices,:]
+
+        # Save training and validation data to file
+        np.savez(f"training_data/interior_{stencil}_training_data.npz",
+                 train_in=train_in, train_out=train_out)
+        np.savez(f"training_data/interior_{stencil}_validation_data.npz",
+                 val_in=val_in, val_out=val_out)
+
+        return train_in, train_out, val_in, val_out
 
     """
     Extracts the nxn stencil corresponding to the requested longitude and latitude.

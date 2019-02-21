@@ -15,7 +15,7 @@ end   = datetime(2019,4,1)
 spin_up_complete = datetime(2018,4,1)
 
 # Output file name
-output_file = "training_data.nc"
+output_file = "training_data/training_data.nc"
 
 # Construct range of dates for each timestep
 simul_len = (end - start).total_seconds()
