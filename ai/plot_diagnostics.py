@@ -27,7 +27,7 @@ args = parser.parse_args()
 if args.stencil == -1 and args.neural_net == "interior":
     raise ValueError("If you want to plot InteriorNN diagnostics you must provide a stencil size")
 
-if args.neural_net == "BoundariesNN":
+if args.neural_net == "boundaries":
     diagnostics = np.loadtxt(f"models/boundariesnn_history.txt")
 else:
     diagnostics = np.loadtxt(f"models/interior_{args.stencil}_history.txt")
