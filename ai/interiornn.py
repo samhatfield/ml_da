@@ -52,6 +52,11 @@ class InteriorNN:
         self.n_lon = int(const.nx)
         self.n_lat = int(const.ny)
 
+        # Compute streamfunction above and below boundaries
+        Δy = float(const.deltay)
+        self.x_south = np.zeros((2))
+        self.x_north = -(self.n_lat+1)*Δy*np.array([float(const.u1), float(const.u2)])
+
         # Stores Adams-Bashforth steps
         self.𝛙_tends = np.zeros((3,self.n_lon,self.n_lat,2))
         self.mode = 0
@@ -60,49 +65,53 @@ class InteriorNN:
     Advance variables by one time step.
     """
     def step(self, 𝛙):
-        # self.𝛙_tends = np.roll(self.𝛙_tends, 1, axis=0)
-        #
-        # # Prepare input array for neural net
-        # infer_in = np.zeros((self.n_lon*(self.n_lat-2),9*2))
-        #
-        # # Loop over all longitudes and latitudes
-        # i = 0
-        # for x in range(self.n_lon):
-        #     for y in range(1,self.n_lat-1):
-        #         infer_in[i,:] = ThreeByThreeNN.get_stencil(𝛙, x, y, self.n_lon)
-        #         i+=1
-        #
-        # infer_in = ThreeByThreeNN.normalize_input(infer_in)
-        #
-        # # Predict new tendencies (tendencies include dt term)
-        # tendencies = self.three_by_three_model.predict(infer_in, batch_size=1)
-        #
-        # # Denormalize output
-        # tendencies = ThreeByThreeNN.denormalize_output(tendencies)
-        #
-        # # Unpack tendencies
-        # self.𝛙_tends[0,:,1:-1,0] = tendencies[:,0].reshape((self.n_lon,self.n_lat-2))
-        # self.𝛙_tends[0,:,1:-1,1] = tendencies[:,1].reshape((self.n_lon,self.n_lat-2))
-        #
-        # # Compute tendencies for boundaries
-        # 𝛙_tend_bound = self.boundariesnn.get_tend(𝛙)
-        # self.𝛙_tends[0,:,0,:]  = 𝛙_tend_bound[:,0,:]
-        # self.𝛙_tends[0,:,-1,:] = 𝛙_tend_bound[:,1,:]
-        #
-        # # 3rd order Adams-Bashforth
-        # if self.mode == 0:
-        #     𝛙_tend = self.𝛙_tends[0,...]
-        #     self.mode = 1
-        # elif self.mode == 1:
-        #     𝛙_tend = 1.5*self.𝛙_tends[0,...] - 0.5*self.𝛙_tends[1,...]
-        #     self.mode = 2
-        # else:
-        #     𝛙_tend = (23.0/12.0)*self.𝛙_tends[0,...] - (4.0/3.0)*self.𝛙_tends[1,...] \
-        #         + (5.0/12.0)*self.𝛙_tends[2,...]
-        #
-        # # Step forward using forward Euler
-        # return 𝛙 + 𝛙_tend
-        raise NotImplementedError
+        self.𝛙_tends = np.roll(self.𝛙_tends, 1, axis=0)
+
+        # Pad input for inferring grid points near boundaries
+        pad = int((self.stencil-1)/2)
+        𝛙_pad = np.zeros((𝛙.shape[0], 𝛙.shape[1]+2*pad, 𝛙.shape[2]))
+        𝛙_pad[:,:pad,0]  = self.x_south[0]
+        𝛙_pad[:,:pad,1]  = self.x_south[1]
+        𝛙_pad[:,-pad:,0] = self.x_north[0]
+        𝛙_pad[:,-pad:,1] = self.x_north[1]
+        𝛙_pad[:,pad:-pad,:] = 𝛙
+
+        # Prepare input array for neural net
+        infer_in = np.zeros((self.n_lon*self.n_lat,2*self.stencil**2))
+
+        # Loop over all longitudes and latitudes
+        i = 0
+        for x in range(self.n_lon):
+            for y in range(self.n_lat):
+                infer_in[i,:] = InteriorNN.get_stencil(𝛙_pad, x, y+pad, self.n_lon, self.stencil)
+                i+=1
+
+        # Normalize input
+        infer_in = InteriorNN.normalize_input(infer_in)
+
+        # Predict new tendencies (tendencies include dt term)
+        tendencies = self.interior_model.predict(infer_in, batch_size=1)
+
+        # Denormalize output
+        tendencies = InteriorNN.denormalize_output(tendencies)
+
+        # Unpack tendencies
+        self.𝛙_tends[0,:,:,0] = tendencies[:,0].reshape((self.n_lon,self.n_lat))
+        self.𝛙_tends[0,:,:,1] = tendencies[:,1].reshape((self.n_lon,self.n_lat))
+
+        # 3rd order Adams-Bashforth
+        if self.mode == 0:
+            𝛙_tend = self.𝛙_tends[0,...]
+            self.mode = 1
+        elif self.mode == 1:
+            𝛙_tend = 1.5*self.𝛙_tends[0,...] - 0.5*self.𝛙_tends[1,...]
+            self.mode = 2
+        else:
+            𝛙_tend = (23.0/12.0)*self.𝛙_tends[0,...] - (4.0/3.0)*self.𝛙_tends[1,...] \
+                + (5.0/12.0)*self.𝛙_tends[2,...]
+
+        # Step forward using forward Euler
+        return 𝛙 + 𝛙_tend
 
     """
     Train the neural net based on the input training data of 𝛙 (streamfunction).
