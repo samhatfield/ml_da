@@ -1,6 +1,7 @@
 import numpy as np
 from numerical_model.qg_constants import qg_constants as const
 
+
 # Define model orography (Gaussian hill centred on (icentre,jcentre))
 def define_orography():
     nx = int(const.nx)
@@ -20,6 +21,7 @@ def define_orography():
             orog[i,j] = orogmax*np.exp(-(distx*distx+disty*disty)/(worog*worog))
 
     return orog
+
 
 # Invent an initial state for the QG model.
 #

@@ -2,6 +2,7 @@ import numpy as np
 from netCDF4 import Dataset
 from numerical_model.qg_constants import qg_constants as const
 
+
 def setup_output(output_file, start_date):
     nx, ny = int(const.nx), int(const.ny)
     d1, d2 = float(const.d1), float(const.d2)
@@ -10,10 +11,10 @@ def setup_output(output_file, start_date):
     dataset = Dataset(output_file, "w", format="NETCDF4_CLASSIC")
 
     # Define dimensions
-    timedim = dataset.createDimension("time", None)
-    idim    = dataset.createDimension("i", nx)
-    jdim    = dataset.createDimension("j", ny)
-    levdim  = dataset.createDimension("lev", 2)
+    dataset.createDimension("time", None)
+    dataset.createDimension("i", nx)
+    dataset.createDimension("j", ny)
+    dataset.createDimension("lev", 2)
 
     # Define dimension variables
     timevar = dataset.createVariable("time", np.int32, ("time",))
@@ -25,10 +26,10 @@ def setup_output(output_file, start_date):
     timevar.setncatts({"units": f"minutes since {start_date:%Y-%m-%dT%H:%M:%SZ}"})
 
     # Define multidimensional variables
-    pv  = dataset.createVariable("pv",  np.float32, ("time", "lev", "j", "i"))
-    𝛙 = dataset.createVariable("psi", np.float32, ("time", "lev", "j", "i"))
-    u   = dataset.createVariable("u",   np.float32, ("time", "lev", "j", "i"))
-    v   = dataset.createVariable("v",   np.float32, ("time", "lev", "j", "i"))
+    dataset.createVariable("pv",  np.float32, ("time", "lev", "j", "i"))
+    dataset.createVariable("psi", np.float32, ("time", "lev", "j", "i"))
+    dataset.createVariable("u",   np.float32, ("time", "lev", "j", "i"))
+    dataset.createVariable("v",   np.float32, ("time", "lev", "j", "i"))
 
     # Assign values to non-unlimited dimensions
     ivar[:]   = np.array([i for i in range(nx)], dtype=np.int32)
@@ -37,12 +38,13 @@ def setup_output(output_file, start_date):
 
     dataset.close()
 
+
 def output(output_file, start_date, date, time_index, pv, 𝛙, u, v):
     # Append latest data along time dimension
     dataset = Dataset(output_file, "a", format="NETCDF4_CLASSIC")
-    dataset["time"][time_index] = (date - start_date).total_seconds()/60.0
+    dataset["time"][time_index]      = (date - start_date).total_seconds()/60.0
     dataset["pv"][time_index,:,:,:]  = np.transpose(pv[:,:,:])
     dataset["psi"][time_index,:,:,:] = np.transpose(𝛙[:,:,:])
-    dataset["u"][time_index,:,:,:] = np.transpose(u[:,:,:])
-    dataset["v"][time_index,:,:,:] = np.transpose(v[:,:,:])
+    dataset["u"][time_index,:,:,:]   = np.transpose(u[:,:,:])
+    dataset["v"][time_index,:,:,:]   = np.transpose(v[:,:,:])
     dataset.close()

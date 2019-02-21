@@ -1,6 +1,7 @@
 import numpy as np
 from boundariesnn import BoundariesNN
 
+
 class InteriorNN:
     """
     Class for predicting the interior domain of the QG model using a neural net.
@@ -143,8 +144,8 @@ class InteriorNN:
         )
 
         # Train!
-        history = model.fit(train_in, train_out, epochs=20, batch_size=128,\
-            validation_data=(val_in, val_out))
+        history = model.fit(train_in, train_out, epochs=20, batch_size=128,
+                            validation_data=(val_in, val_out))
 
         # Output weights and diagnostics files
         save_history(f"models/interior_{stencil}_history.txt", history)

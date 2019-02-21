@@ -1,7 +1,5 @@
-from threebythreenn import ThreeByThreeNN
-from numerical_model.subroutines import prepare_integration
+from interiornn import InteriorNN
 from numerical_model.qg_constants import qg_constants as const
-from qg_setup import define_orography, invent_state
 from qg_output import setup_output, output
 from datetime import datetime, timedelta
 from iris import load_cube, Constraint
