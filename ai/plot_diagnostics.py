@@ -35,7 +35,9 @@ ax2.set_ylabel("Correlation")
 ax2.set_xlabel("Epoch")
 plt.legend()
 if args.neural_net == "boundaries":
+    plt.suptitle("Boundaries")
     plt.savefig("plots/boundaries_diag.pdf")
 else:
+    plt.suptitle(f"{args.stencil}x{args.stencil} stencil")
     plt.savefig(f"plots/interior_{args.stencil}_diag.pdf")
 plt.show()
