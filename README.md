@@ -1,10 +1,10 @@
-# Machine learning and data assimilation with the Lorenz '96 system
+# Machine learning and data assimilation with a quasigeostrophic vorticity system
 
-This repository contains code for investigating machine learning and data assimilation with the Lorenz '96 system, a toy weather model, inspired by [Dueben and Bauer](https://doi.org/10.5194/gmd-11-3999-2018).
+This repository contains code for investigating machine learning and data assimilation with a quasigeostrophic vorticity.
 
 ## Repository structure
 
-- `ai` contains scripts for training a neural net to emulate the Lorenz '96 system.
+- `ai` contains scripts for training a neural net to replace the numerical model.
 - `assimilation` contains scripts for running data assimilation with the numerical model and the trained model.
 - `forecast` contains scripts for comparing "weather forecasts" run with the numerical model and the trained model.
 - `numerical_model` contains FORTRAN90 code for running the numerical model. This is compiled with f2py so it can be called from Python.
