@@ -1,6 +1,6 @@
 # Machine learning and data assimilation with a quasigeostrophic vorticity system
 
-This repository contains code for investigating machine learning and data assimilation with a quasigeostrophic vorticity.
+This repository contains code for investigating machine learning and data assimilation with a quasigeostrophic vorticity model.
 
 ## Repository structure
 
